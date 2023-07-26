@@ -1,0 +1,46 @@
+<label for="file">Upload an Excel file:</label>
+<input type="file" id="file" (change)="onFileChange($event)" accept=".xlsx" />
+<hr>
+
+<div *ngIf="data.length > 0">
+
+
+  <div *ngFor="let resultHeader of resultHeaders; index as i">
+    <label [for]="'dropdown-' + i">{{ resultHeader }}</label>
+    <select [(ngModel)]="selectedColumns[i]" [id]="'dropdown-' + i">
+      <option *ngFor="let header of headers" [ngValue]="header">{{ header }}</option>
+    </select>
+  </div>
+  <hr>
+
+  <button (click)="download()">Download Excel File</button>
+
+  <hr>
+  <p>
+    data sample
+  </p>
+
+  <hr>
+
+
+  <ngx-datatable class="material" [rows]="data | slice:0:10" [columns]="columns">
+  </ngx-datatable>
+
+</div>
+
+
+
+
+
+<hr>
+<pre>
+  {{columns | json}}
+</pre>
+<hr>
+<pre>
+  {{headers | json}}
+</pre>
+<hr>
+<pre>
+  {{data | json}}
+</pre>
