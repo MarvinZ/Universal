@@ -64,13 +64,12 @@ export class UploadComponent {
 
 
 
-  isValidHeader(row: any[]): boolean {
-    /* Define criteria for what constitutes a valid header row */
-    let nonEmptyCellCount = row.reduce((count, cell) =>
-      (cell !== null && cell !== undefined && typeof cell === 'string' && cell.trim() !== '') ? count + 1 : count
-    , 0);
-    return nonEmptyCellCount >= 2;  // Adjust this number based on your actual data
+  private isValidHeader(row: any[]): boolean {
+    const nonEmptyCells = row.filter(cell => cell !== null && cell !== undefined && cell !== '');
+    const threshold = 5;  // Adjust this value as needed
+    return nonEmptyCells.length >= threshold;
   }
+
 
 
 
