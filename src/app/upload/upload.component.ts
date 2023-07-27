@@ -136,4 +136,17 @@ export class UploadComponent {
       return selectedRow;
     });
   }
+
+
+  addResultHeader() {
+    const newHeader = prompt('Please enter the new column name:');
+    if (newHeader) {
+      this.resultHeaders.push(newHeader);
+      this.selectedColumnsObj.push({ name: newHeader, prop: newHeader });
+    }
+  }
+
+
+
+
 }
