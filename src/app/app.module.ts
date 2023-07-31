@@ -6,7 +6,8 @@ import { AppComponent } from './app.component';
 import { UploadComponent } from './upload/upload.component';
 import { AppRoutingModule } from './app-routing.module';
 
-import { NgxDatatableModule } from '@swimlane/ngx-datatable'; // <-- add this line
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap'; // <-- add this line
 
 
 @NgModule({
@@ -18,7 +19,8 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable'; // <-- add this li
     BrowserModule,
     AppRoutingModule,
     NgxDatatableModule,
-    FormsModule
+    FormsModule,
+    NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,61 +1,62 @@
-<label for="file">Upload an Excel file:</label>
-<input type="file" id="file" (change)="onFileChange($event)" accept=".xlsx" />
-<hr>
+<div class="container">
 
-<div *ngIf="data.length > 0">
-
-
-  <div *ngFor="let header of resultHeaders; let i = index">
-    <label>{{ header }}:</label>
-    <select [(ngModel)]="selectedColumns[i]" (change)="updateSelectedData()">
-      <option [value]="">-- Select a column --</option>
-      <option *ngFor="let column of headers" [value]="column">{{ column }}</option>
-    </select>
+  <div class="mb-3">
+    <label for="file" class="form-label">Upload an Excel file:</label>
+    <input type="file" id="file" class="form-control" (change)="onFileChange($event)" accept=".xlsx" />
   </div>
 
-  <button (click)="addResultHeader()">Add New Column</button>
+  <div *ngIf="data.length > 0">
+
+    <div *ngFor="let header of resultHeaders; let i = index" class="form-group">
+      <label class="col-form-label">{{ header }}:</label>
+      <select [(ngModel)]="selectedColumns[i]" (change)="updateSelectedData()" class="form-control">
+        <option [value]="">-- Select a column --</option>
+        <option *ngFor="let column of headers" [value]="column">{{ column }}</option>
+      </select>
+    </div>
+
+    <button  class="btn btn-primary" (click)="addResultHeader()">Add New Column</button>
+
+    <hr>
+    <strong>
+      Source File
+    </strong>
+
+    <hr>
+
+    <ngx-datatable class="table" [rows]="data | slice:0:10" [columns]="columns">
+    </ngx-datatable>
+
+    <hr>
+
+    <strong>
+      Result File
+    </strong>
+    <ngx-datatable class="table" [rows]="selectedDataObj | slice:0:10" [columns]="selectedColumnsObj">
+    </ngx-datatable>
 
 
-  <hr>
+    <hr>
 
-  <button (click)="download()">Download Excel File</button>
+    <button  class="btn btn-primary" (click)="download()">Download Excel File</button>
 
-  <hr>
-  <p>
-    data source
-  </p>
+  </div>
 
-  <hr>
-
-  <ngx-datatable class="material" [rows]="data | slice:0:10" [columns]="columns">
-  </ngx-datatable>
-
-  <hr>
-
-  <p>
-    data result
-  </p>
-  <ngx-datatable class="material" [rows]="selectedDataObj | slice:0:10" [columns]="selectedColumnsObj">
-  </ngx-datatable>
-
-
-
-</div>
-
-
-<hr>
-<pre>
+  <!-- <hr>
+  <pre>
   {{columns | json}}
 </pre>
-<hr>
-<pre>
+  <hr>
+  <pre>
   {{headers | json}}
 </pre>
-<hr>
-<pre>
+  <hr>
+  <pre>
   {{data | json}}
 </pre>
-<hr>
-<pre>
+  <hr>
+  <pre>
   {{selectedDataObj | json}}
-</pre>
+</pre> -->
+
+</div>
