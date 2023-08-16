@@ -19,16 +19,17 @@ export class UploadComponent {
     'CASE PACK',
     'MAP'
   ];
-  selectedColumns: string[] = [];
+  selectedColumns: string[][] = this.resultHeaders.map(() => ['', '']);
   selectedDataObj: { [key: string]: any }[] = []; // Initialize as an empty array
   selectedColumnsObj: { name: string; prop: string }[] = [];
+  shouldConcatenate: boolean[] = [];
+
 
   constructor() {
-    this.selectedColumnsObj = this.resultHeaders.map((header) => ({
-      name: header,
-      prop: header,
-    }));
-  }
+    this.selectedColumnsObj = this.resultHeaders.map(header => ({ name: header, prop: header }));
+    this.shouldConcatenate = new Array(this.resultHeaders.length).fill(false);
+}
+
 
   onFileChange(evt: any) {
     const target: DataTransfer = <DataTransfer>evt.target;
@@ -36,59 +37,58 @@ export class UploadComponent {
 
     const reader: FileReader = new FileReader();
     reader.onload = (e: any) => {
-      /* read workbook */
-      const bstr: string = e.target.result;
-      const workbook: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+        /* read workbook */
+        const bstr: string = e.target.result;
+        const workbook: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
 
-      /* grab first sheet */
-      const worksheetName: string = workbook.SheetNames[0];
-      const worksheet: XLSX.WorkSheet = workbook.Sheets[worksheetName];
+        /* grab first sheet */
+        const worksheetName: string = workbook.SheetNames[0];
+        const worksheet: XLSX.WorkSheet = workbook.Sheets[worksheetName];
 
-      /* save data and headers */
-      let json: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        /* save data and headers */
+        let json: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      /* Detect where actual headers start */
-      while (json.length && !this.isValidHeader(json[0])) {
-        json.shift();
-      }
+        /* Detect where actual headers start */
+        while (json.length && !this.isValidHeader(json[0])) {
+            json.shift();
+        }
 
-      this.headers = json.length ? (json.shift() as string[]) : [];
-      if (this.headers.length > 0) {
-        this.columns = this.headers
-          .filter((header) => header !== null && header !== undefined)
-          .map((header) => ({ name: header, prop: header }));
-      }
+        this.headers = json.length ? (json.shift() as string[]) : [];
+        if (this.headers.length > 0) {
+            this.columns = this.headers
+                .filter((header) => header !== null && header !== undefined)
+                .map((header) => ({ name: header, prop: header }));
+        }
 
-      // Auto-select columns if names match (case-insensitive)
-      this.selectedColumns = this.resultHeaders.map(
-        (resultHeader) =>
-          this.headers.find(
-            (header) => header.toLowerCase() === resultHeader.toLowerCase()
-          ) || ''
-      );
+        // Auto-select columns if names match (case-insensitive)
+        this.selectedColumns = this.resultHeaders.map((resultHeader) => [
+            this.headers.find((header) => header.toLowerCase() === resultHeader.toLowerCase()) || '',
+            '' // The second column for potential concatenation
+        ]);
 
-      /* transform rows into objects */
-      this.data = json.map((row) => {
-        let rowData: { [key: string]: any } = {};
-        this.headers.forEach((header, i) => {
-          if (header && i < row.length) {
-            rowData[header] = row[i];
-          }
+        /* transform rows into objects */
+        this.data = json.map((row) => {
+            let rowData: { [key: string]: any } = {};
+            this.headers.forEach((header, i) => {
+                if (header && i < row.length) {
+                    rowData[header] = row[i];
+                }
+            });
+            return rowData;
         });
-        return rowData;
-      });
 
-      /* Update selectedData based on selectedColumns */
-      this.updateSelectedData();
+        /* Update selectedData based on selectedColumns */
+        this.updateSelectedData();
 
-      /* log headers and data */
-      console.log('Headers:', this.headers);
-      console.log('Data:', this.data);
-      console.log('Selected Data:', this.selectedDataObj);
+        /* log headers and data */
+        console.log('Headers:', this.headers);
+        console.log('Data:', this.data);
+        console.log('Selected Data:', this.selectedDataObj);
     };
 
     reader.readAsBinaryString(target.files[0]);
-  }
+}
+
 
   private isValidHeader(row: any[]): boolean {
     const nonEmptyCells = row.filter(
@@ -99,27 +99,23 @@ export class UploadComponent {
   }
 
   updateSelectedData() {
-    this.selectedDataObj = this.data.map((row) => {
-      let selectedRow: { [key: string]: any } = {};
-      this.resultHeaders.forEach((resultHeader, i) => {
-        let selectedColumn = this.selectedColumns[i];
-        if (selectedColumn) {
-          if (resultHeader === 'UPC') {
-            selectedRow[resultHeader] = this.cleanUPCValue(row[selectedColumn]);
-          } else {
-            selectedRow[resultHeader] = row[selectedColumn];
-          }
-        }
-      });
-      return selectedRow;
-    });
+    this.selectedDataObj = this.data.map(row => {
+        let selectedRow: { [key: string]: any } = {};
+        this.resultHeaders.forEach((resultHeader, i) => {
+            let value1 = this.selectedColumns[i][0] ? row[this.selectedColumns[i][0]] : '';
+            let value2 = this.selectedColumns[i][1] ? row[this.selectedColumns[i][1]] : '';
 
-    // Update selectedColumnsObj to match resultHeaders
-    this.selectedColumnsObj = this.resultHeaders.map((header) => ({
-      name: header,
-      prop: header,
-    }));
-  }
+            if (resultHeader === 'UPC') {
+                value1 = this.cleanUPCValue(value1);
+                value2 = this.cleanUPCValue(value2);
+            }
+
+            selectedRow[resultHeader] = [value1, value2].join(' ').trim();
+        });
+        return selectedRow;
+    });
+}
+
 
   download() {
     /* Create a new workbook and worksheet */
@@ -135,13 +131,22 @@ export class UploadComponent {
 
   selectedData() {
     return this.data.map((row) => {
-      let selectedRow: { [key: string]: any } = {};
-      this.resultHeaders.forEach((header, i) => {
-        selectedRow[header] = row[this.selectedColumns[i]];
-      });
-      return selectedRow;
+        let selectedRow: { [key: string]: any } = {};
+        this.resultHeaders.forEach((header, i) => {
+            const selectedCols = this.selectedColumns[i];
+            if (this.shouldConcatenate[i] && selectedCols[1]) {
+                const firstColValue = row[selectedCols[0]] || '';
+                const secondColValue = row[selectedCols[1]] || '';
+                selectedRow[header] = `${firstColValue} ${secondColValue}`.trim();
+            } else {
+                selectedRow[header] = row[selectedCols[0]];
+            }
+        });
+        return selectedRow;
     });
-  }
+}
+
+
 
   addResultHeader() {
     const newHeader = prompt('Please enter the new column name:');
