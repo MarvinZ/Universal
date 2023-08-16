@@ -17,15 +17,18 @@ export class UploadComponent {
     'ITEM CODE',
     'SIZE/ TYPE/ VARIATION',
     'CASE PACK',
+    'MAP'
   ];
   selectedColumns: string[] = [];
   selectedDataObj: { [key: string]: any }[] = []; // Initialize as an empty array
   selectedColumnsObj: { name: string; prop: string }[] = [];
 
   constructor() {
-    this.selectedColumnsObj = this.resultHeaders.map(header => ({ name: header, prop: header }));
+    this.selectedColumnsObj = this.resultHeaders.map((header) => ({
+      name: header,
+      prop: header,
+    }));
   }
-
 
   onFileChange(evt: any) {
     const target: DataTransfer = <DataTransfer>evt.target;
@@ -56,6 +59,14 @@ export class UploadComponent {
           .map((header) => ({ name: header, prop: header }));
       }
 
+      // Auto-select columns if names match (case-insensitive)
+      this.selectedColumns = this.resultHeaders.map(
+        (resultHeader) =>
+          this.headers.find(
+            (header) => header.toLowerCase() === resultHeader.toLowerCase()
+          ) || ''
+      );
+
       /* transform rows into objects */
       this.data = json.map((row) => {
         let rowData: { [key: string]: any } = {};
@@ -68,23 +79,12 @@ export class UploadComponent {
       });
 
       /* Update selectedData based on selectedColumns */
-      this.selectedDataObj = this.data.map((row) => {
-        let rowData: { [key: string]: any } = {};
-        this.resultHeaders.forEach((header, i) => {
-          if (
-            this.selectedColumns[i] &&
-            row[this.selectedColumns[i]] !== undefined
-          ) {
-            rowData[header] = row[this.selectedColumns[i]];
-          }
-        });
-        return rowData;
-      });
+      this.updateSelectedData();
 
       /* log headers and data */
       console.log('Headers:', this.headers);
       console.log('Data:', this.data);
-      console.log('Selected Data:', this.selectedData);
+      console.log('Selected Data:', this.selectedDataObj);
     };
 
     reader.readAsBinaryString(target.files[0]);
@@ -103,7 +103,13 @@ export class UploadComponent {
       let selectedRow: { [key: string]: any } = {};
       this.resultHeaders.forEach((resultHeader, i) => {
         let selectedColumn = this.selectedColumns[i];
-        selectedRow[resultHeader] = selectedColumn ? row[selectedColumn] : null;
+        if (selectedColumn) {
+          if (resultHeader === 'UPC') {
+            selectedRow[resultHeader] = this.cleanUPCValue(row[selectedColumn]);
+          } else {
+            selectedRow[resultHeader] = row[selectedColumn];
+          }
+        }
       });
       return selectedRow;
     });
@@ -137,7 +143,6 @@ export class UploadComponent {
     });
   }
 
-
   addResultHeader() {
     const newHeader = prompt('Please enter the new column name:');
     if (newHeader) {
@@ -146,7 +151,11 @@ export class UploadComponent {
     }
   }
 
-
-
+  cleanUPCValue(value: any): string {
+    if (typeof value !== 'string') {
+      value = String(value); // Convert non-string value to string
+    }
+    return value.replace(/[^0-9]/g, '');
+  }
 
 }
