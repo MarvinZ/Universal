@@ -14,16 +14,23 @@
           <option *ngFor="let column of headers" [value]="column">{{ column }}</option>
       </select>
 
-      <!-- Checkbox for concatenation -->
-      <input type="checkbox" [(ngModel)]="shouldConcatenate[i]" (change)="updateSelectedData()" [id]="'checkbox-' + i"  />
-      <label [for]="'checkbox-' + i">Concatenate</label>
+      <!-- Dropdown for Operation Choice -->
+      <select [(ngModel)]="operationChoice[i]" (change)="updateSelectedData()" class="form-control" [id]="'operation-' + i">
+          <option value="none">Ready</option>
+          <option value="concatenate">Concatenate</option>
+          <option value="add">Add (+)</option>
+          <option value="subtract">Subtract (-)</option>
+          <option value="multiply">Multiply (*)</option>
+          <option value="divide">Divide (/)</option>
+      </select>
 
-      <!-- New dropdown for potential second column, displayed based on checkbox -->
-      <select *ngIf="shouldConcatenate[i]" [(ngModel)]="selectedColumns[i][1]" (change)="updateSelectedData()" class="form-control" [id]="'select2-' + i" >
+      <!-- New dropdown for potential second column, displayed based on operation choice -->
+      <select *ngIf="operationChoice[i] !== 'none'" [(ngModel)]="selectedColumns[i][1]" (change)="updateSelectedData()" class="form-control" [id]="'select2-' + i" >
           <option [value]="">-- Select another column --</option>
           <option *ngFor="let column of headers" [value]="column">{{ column }}</option>
       </select>
   </div>
+
 
 
 

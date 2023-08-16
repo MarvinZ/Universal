@@ -23,6 +23,7 @@ export class UploadComponent {
   selectedDataObj: { [key: string]: any }[] = []; // Initialize as an empty array
   selectedColumnsObj: { name: string; prop: string }[] = [];
   shouldConcatenate: boolean[] = [];
+  operationChoice: string[] = Array(this.resultHeaders.length).fill('none');
 
 
   constructor() {
@@ -102,15 +103,45 @@ export class UploadComponent {
     this.selectedDataObj = this.data.map(row => {
         let selectedRow: { [key: string]: any } = {};
         this.resultHeaders.forEach((resultHeader, i) => {
-            let value1 = this.selectedColumns[i][0] ? row[this.selectedColumns[i][0]] : '';
-            let value2 = this.selectedColumns[i][1] ? row[this.selectedColumns[i][1]] : '';
+            let value1 = this.selectedColumns[i][0] ? row[this.selectedColumns[i][0]] : null;
+            let value2 = this.selectedColumns[i][1] ? row[this.selectedColumns[i][1]] : null;
 
             if (resultHeader === 'UPC') {
                 value1 = this.cleanUPCValue(value1);
                 value2 = this.cleanUPCValue(value2);
             }
 
-            selectedRow[resultHeader] = [value1, value2].join(' ').trim();
+            if(this.operationChoice[i] === 'none') {
+                selectedRow[resultHeader] = [value1, value2].join(' ').trim();
+            } else {
+                const num1 = parseFloat(value1);
+                const num2 = parseFloat(value2);
+
+                switch (this.operationChoice[i]) {
+                    case 'add':
+                        selectedRow[resultHeader] = num1 + num2;
+                        break;
+                    case 'subtract':
+                        selectedRow[resultHeader] = num1 - num2;
+                        break;
+                    case 'multiply':
+                        selectedRow[resultHeader] = num1 * num2;
+                        break;
+                    case 'divide':
+                        if(num2 !== 0) {
+                            selectedRow[resultHeader] = num1 / num2;
+                        } else {
+                            selectedRow[resultHeader] = 'N/A';  // or Infinity, depending on your preference
+                        }
+                        break;
+                    case 'concatenate':
+                        selectedRow[resultHeader] = [value1, value2].join(' ').trim();
+                        break;
+                    default:
+                        selectedRow[resultHeader] = 'ERROR';
+                        break;
+                }
+            }
         });
         return selectedRow;
     });
